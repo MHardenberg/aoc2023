@@ -1,6 +1,9 @@
 const std = @import("std");
 const utils = @import("../utils.zig");
 const allocator = std.heap.page_allocator;
+const MAX_WORD_LENGTH = 5;
+const MIN_SPOKEN_DIGIT_LENGTH = 3;
+const MAX_SPOKEN_DIGIT_LENGTH = 5;
 
 pub fn calibrate() !void {
     var map = std.StringHashMap(u8).init(
@@ -39,8 +42,8 @@ pub fn calibrate() !void {
             if (std.ascii.isDigit(char)) {
                 value = char;
             } else { // check for spelled digit
-                var word_buff: [5]u8 = undefined;
-                for (0..5) |j| {
+                var word_buff: [MAX_WORD_LENGTH]u8 = undefined;
+                for (0..MAX_WORD_LENGTH) |j| {
                     if (i + j == line.len) {
                         break;
                     }
@@ -48,7 +51,7 @@ pub fn calibrate() !void {
                 }
 
                 // all spelling are 3, 4 or 5 chars long
-                for (3..6) |k| {
+                for (MIN_SPOKEN_DIGIT_LENGTH..MAX_SPOKEN_DIGIT_LENGTH + 1) |k| {
                     value = map.get(word_buff[0..k]);
                     if (value) |v| {
                         std.debug.print("{s}\t: {s} val = {}\n", .{ line, word_buff[0..k], v });
