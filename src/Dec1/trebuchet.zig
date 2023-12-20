@@ -51,7 +51,7 @@ pub fn calibrate() !void {
                 for (3..6) |k| {
                     value = map.get(word_buff[0..k]);
                     if (value) |v| {
-                        std.debug.print("{s}\t: {s} val = {}\n", .{ line, word_buff, v });
+                        std.debug.print("{s}\t: {s} val = {}\n", .{ line, word_buff[0..k], v });
                         break;
                     }
                 }
