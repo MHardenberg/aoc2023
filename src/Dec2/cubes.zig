@@ -18,12 +18,33 @@ pub fn possible_games() !void {
     var game_num: ?u8 = undefined;
     var iterator = std.mem.splitScalar(u8, input, '\n');
     while (iterator.next()) |line| {
-        var line_iter = std.mem.splitScalar(u8, line, ':');
-        var game_str = line_iter.next();
+        var game_iter = std.mem.splitScalar(u8, line, ':');
+
+        // get game number
+        var game_str = game_iter.next();
         if (game_str) |gs| {
             game_num = try parse_game_num(gs);
             if (game_num) |gn| {
                 std.debug.print("Game number: {}\n", .{gn});
+            }
+        } else {
+            continue; // if no game number
+        }
+
+        // split into sets
+        const sets = game_iter.next();
+        var set_iter = std.mem.splitScalar(u8, sets, ';');
+        while (set_iter.next()) |set| {
+            var cubes_iter = std.men.splitScalar(u8, set, ',');
+            while (cubes_iter.next()) |cubes| {
+                for (cubes) |char| {
+                    // add all digits to buffer until space
+                    // then check the next char for r,g,b
+                    // assign to map
+                    if (!std.ascii.isDigit(char)) {
+                        continue;
+                    }
+                }
             }
         }
     }
