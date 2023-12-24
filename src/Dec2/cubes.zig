@@ -2,7 +2,7 @@ const std = @import("std");
 const utils = @import("../utils.zig");
 const allocator = std.heap.page_allocator;
 
-pub fn parse_game_num(game_str: []const u8) !?u8 {
+fn parse_game_num(game_str: []const u8) !?u8 {
     if (game_str.len == 0) {
         return null;
     }
@@ -10,7 +10,7 @@ pub fn parse_game_num(game_str: []const u8) !?u8 {
     return try std.fmt.parseUnsigned(u8, num_str, 10);
 }
 
-pub fn parse_set(set_str: []const u8) ![3]u8 {
+fn parse_set(set_str: []const u8) ![3]u8 {
     const Colour = enum { red, green, blue };
     var c_map = std.AutoHashMap(u8, u8).init(allocator);
     try c_map.put('r', @intFromEnum(Colour.red));
@@ -49,35 +49,63 @@ pub fn parse_set(set_str: []const u8) ![3]u8 {
     return out;
 }
 
+fn is_possible(cubes: [3]u8) bool {
+    const allowed_reds = 12;
+    const allowed_greens = 13;
+    const allowed_blues = 14;
+    const allowed_cubes = [_]u8{ allowed_reds, allowed_greens, allowed_blues };
+
+    for (0.., cubes) |i, c| {
+        if (c > allowed_cubes[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 pub fn possible_games() !void {
+    var possible_game_sum: u16 = 0;
     std.debug.print("Checking games...\n", .{});
     const input = try utils.readFile("./src/Dec2/input");
     defer allocator.free(input);
 
     var game_num: ?u8 = undefined;
     var iterator = std.mem.splitScalar(u8, input, '\n');
-    while (iterator.next()) |line| {
-        var game_iter = std.mem.splitScalar(u8, line, ':');
+    while (iterator.next()) |game| {
+        var game_iter = std.mem.splitScalar(u8, game, ':');
+        var game_possible = true;
 
         // get game number
         var game_str = game_iter.next();
         if (game_str) |gs| {
             game_num = try parse_game_num(gs);
             if (game_num) |gn| {
-                std.debug.print("\n{s}\n\tGame number: {}\n", .{ line, gn });
+                std.debug.print("\n{s}\n\tGame number: {}\n", .{ game, gn });
+
+                // split into sets
+                const sets = game_iter.next();
+                if (sets) |s| {
+                    var set_iter = std.mem.splitScalar(u8, s, ';');
+                    while (set_iter.next()) |set| {
+                        const cubes = try parse_set(set);
+                        std.debug.print("\tSet: {s}\n", .{set});
+                        std.debug.print("\t\t-> rgb Cubes : {any}\n", .{cubes});
+
+                        const set_possible = is_possible(cubes);
+                        game_possible = game_possible and set_possible;
+                        std.debug.print("\tset possible: {}\n", .{set_possible});
+                    }
+
+                    if (game_possible) {
+                        possible_game_sum += @as(u16, gn);
+                        std.debug.print("game {any}", .{gn});
+                        std.debug.print("possible: {}\n", .{game_possible});
+                    }
+                }
             }
         } else {
             continue; // if no game number
         }
-
-        // split into sets
-        const sets = game_iter.next();
-        if (sets) |s| {
-            var set_iter = std.mem.splitScalar(u8, s, ';');
-            while (set_iter.next()) |set| {
-                const cubes = try parse_set(set);
-                std.debug.print("\tSet: {s}\n\t\t-> rgb Cubes : {any}\n", .{ set, cubes });
-            }
-        }
     }
+    std.debug.print("Sum of possible game ids: {}\n", .{possible_game_sum});
 }
